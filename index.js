@@ -24,8 +24,14 @@ if (!fs.existsSync(resumesDir)) fs.mkdirSync(resumesDir);
 if (!fs.existsSync(coverLettersDir)) fs.mkdirSync(coverLettersDir);
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir);
 
-// 미들웨어 설정
-app.use(cors({ origin: "*", methods: ["GET", "POST", "PUT", "DELETE"] }));
+// CORS 설정: 환경변수로 프론트엔드 URL 지정
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "*", // .env.local에서 FRONTEND_URL 환경변수 사용
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true, // 자격 증명 허용
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({ createParentPath: true }));
