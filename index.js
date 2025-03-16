@@ -10,7 +10,7 @@ const fs = require("fs");
 dotenv.config({ path: ".env.local" });
 
 const app = express();
-const PORT = process.env.PORT || 5050;
+const PORT = process.env.PORT;
 
 // 업로드 디렉토리 설정
 const uploadDir = path.join(__dirname, "uploads");
@@ -56,6 +56,10 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
   });
+});
+
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to the backend API!" });
 });
 
 // 서버 실행
