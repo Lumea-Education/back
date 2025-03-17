@@ -24,8 +24,20 @@ if (!fs.existsSync(resumesDir)) fs.mkdirSync(resumesDir);
 if (!fs.existsSync(coverLettersDir)) fs.mkdirSync(coverLettersDir);
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir);
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+  : [];
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+  origin: function (origin, callback) {
+    // 테스트 요청 등 origin이 없을 때 허용
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 };
