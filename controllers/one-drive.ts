@@ -11,7 +11,7 @@ export async function uploadToOneDrive(
 ) {
   try {
     if (!req.files || !req.files.file) {
-      return res.status(400).json({ error: "업로드할 파일이 없습니다." });
+      return res.status(400).json({ error: "There is no file to upload." });
     }
     const file = req.files.file as any;
     const uploadDir = path.join(__dirname, "../uploads");
@@ -33,17 +33,17 @@ export async function uploadToOneDrive(
     });
 
     if (!response.ok) {
-      throw new Error(`업로드 실패: ${response.statusText}`);
+      throw new Error(`upload not succeeded: ${response.statusText}`);
     }
     const data = await response.json();
     fs.unlinkSync(tempFilePath);
 
     res.status(200).json({
-      message: "파일이 OneDrive에 업로드되었습니다.",
+      message: "Your file has been uploaded",
       fileData: data,
     });
   } catch (error) {
-    console.error("OneDrive 업로드 에러:", error);
+    console.error("Error:", error);
     next(error);
   }
 }

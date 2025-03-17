@@ -3,6 +3,18 @@ import { uploadToOneDrive } from "../controllers/one-drive";
 
 const router = express.Router();
 
-router.post("/upload-onedrive", uploadToOneDrive);
+const asyncHandler =
+  (
+    fn: (
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction
+    ) => Promise<any>
+  ) =>
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+
+router.post("/upload-onedrive", asyncHandler(uploadToOneDrive));
 
 export default router;
