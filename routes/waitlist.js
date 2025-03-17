@@ -1,14 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const WaitlistEntry = require("../models/WaitlistEntry");
+const WaitlistEntry = require("../models/wait");
 
-// POST - Submit a waitlist entry
 router.post("/", async (req, res) => {
   try {
-    // Extract form data
     const { name, email, phone } = req.body;
 
-    // Validate required fields
     if (!name || !email || !phone) {
       return res.status(400).json({
         success: false,
@@ -16,7 +13,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Check if email already exists in waitlist
     const existingEntry = await WaitlistEntry.findOne({ email });
     if (existingEntry) {
       return res.status(400).json({

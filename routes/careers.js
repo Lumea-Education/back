@@ -1,9 +1,8 @@
 const express = require("express");
-const CareerApplication = require("../models/JobApplication");
+const CareerApplication = require("../models/job");
 
 const router = express.Router();
 
-// JSON 데이터 저장 API (파일 업로드 X)
 router.post("/", async (req, res) => {
   console.log("🔍 [STEP 1] Received request at /api/careers:", req.body);
 
@@ -23,10 +22,10 @@ router.post("/", async (req, res) => {
       resumePath: req.body.resumePath || "pending_upload",
     });
 
-    console.log("🛠 [STEP 3] MongoDB에 저장 시도... 🚀", newApplication); // ✅ 여기에 추가!
+    console.log("🛠 [STEP 3] MongoDB에 저장 시도... 🚀", newApplication);
 
     const savedApplication = await newApplication.save();
-    console.log("✅ [STEP 4] MongoDB 저장 성공! 🎉", savedApplication); // ✅ 저장 성공 로그 추가
+    console.log("✅ [STEP 4] MongoDB 저장 성공! 🎉", savedApplication);
 
     res.status(201).json({
       success: true,

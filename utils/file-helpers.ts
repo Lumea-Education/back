@@ -1,42 +1,33 @@
-const fs = require("fs");
-const path = require("path");
+// utils/fileHelpers.ts
+import fs from "fs";
+import path from "path";
+import { Request } from "express";
 
-// Initialize upload directories
-const initializeUploadDirectories = () => {
+export function initializeUploadDirectories(): void {
   const dirs = [
     path.join(__dirname, "../uploads"),
     path.join(__dirname, "../uploads/resumes"),
     path.join(__dirname, "../uploads/cover-letters"),
+    path.join(__dirname, "../uploads/images"),
   ];
-
   dirs.forEach((dir) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
   });
-};
+}
 
-// Get file URL from file path
-const getFileUrl = (filePath, req) => {
+export function getFileUrl(filePath: string, req: Request): string | null {
   if (!filePath) return null;
-
   const relativePath = filePath.replace(path.join(__dirname, ".."), "");
   const baseUrl = `${req.protocol}://${req.get("host")}`;
-
   return `${baseUrl}${relativePath.replace(/\\/g, "/")}`;
-};
+}
 
-// Delete file
-const deleteFile = (filePath) => {
+export function deleteFile(filePath: string): boolean {
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
     return true;
   }
   return false;
-};
-
-module.exports = {
-  initializeUploadDirectories,
-  getFileUrl,
-  deleteFile,
-};
+}

@@ -1,11 +1,8 @@
-// API Response Types
 export interface ApiResponse {
   success: boolean;
   message: string;
   [key: string]: any;
 }
-
-// Job Application Types
 export interface JobApplicationRequest {
   firstName: string;
   lastName: string;
@@ -25,7 +22,6 @@ export interface JobApplicationRequest {
   positionName: string;
 }
 
-// Volunteer Application Types
 export interface VolunteerApplicationRequest {
   firstName: string;
   lastName: string;
@@ -35,7 +31,6 @@ export interface VolunteerApplicationRequest {
   positionName: string;
 }
 
-// Contact Request Types
 export interface ContactRequest {
   name: string;
   email: string;
@@ -45,7 +40,6 @@ export interface ContactRequest {
   message: string;
 }
 
-// Waitlist Entry Types
 export interface WaitlistRequest {
   name: string;
   email: string;

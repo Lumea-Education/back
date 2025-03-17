@@ -1,11 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const ContactRequest = require("../models/ContactRequest");
+const ContactRequest = require("../models/contact");
 
-// POST - Submit a contact request
 router.post("/", async (req, res) => {
   try {
-    // Extract form data
     const {
       name,
       email,
@@ -17,7 +15,6 @@ router.post("/", async (req, res) => {
       message,
     } = req.body;
 
-    // Validate required fields
     if (!name || !email || !phoneNumber || !inquiryType || !message) {
       return res.status(400).json({
         success: false,
@@ -25,7 +22,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Create a new contact request
     const contactRequest = new ContactRequest({
       name,
       email,
@@ -37,10 +33,8 @@ router.post("/", async (req, res) => {
       message,
     });
 
-    // Save to database
     await contactRequest.save();
 
-    // Return success response
     res.status(201).json({
       success: true,
       message: "Contact request submitted successfully",
