@@ -37,7 +37,11 @@ const VolunteerApplicationSchema = new mongoose_1.Schema({
             "Please provide a valid email address",
         ],
     },
-    phoneNumber: { type: String, trim: true },
+    phone: {
+        countryCode: { type: String, required: true },
+        areaCode: { type: String, required: true },
+        number: { type: String, required: true },
+    },
     resumePath: { type: String, required: true },
     positionName: { type: String, required: true, trim: true },
 }, { timestamps: true });

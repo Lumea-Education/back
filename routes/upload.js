@@ -70,15 +70,31 @@ const volunteerUploadHandler = (req, res, next) => __awaiter(void 0, void 0, voi
         }
         const volunteerDir = path_1.default.join(uploadDir, "volunteer");
         const resume = req.files.resume;
-        const resumeFileName = `${(0, uuid_1.v4)()}-${resume.name}`;
+        const volunteerId = (0, uuid_1.v4)();
+        const resumeFileName = `${volunteerId}-${resume.name}`;
         const resumePath = `/uploads/volunteer/${resumeFileName}`;
         yield resume.mv(path_1.default.join(volunteerDir, resumeFileName));
-        const { firstName, lastName, email, phoneNumber, positionName } = req.body;
+        const { firstName, lastName, email, countryCode, areaCode, number, positionName, } = req.body;
+        if (!firstName ||
+            !lastName ||
+            !email ||
+            !countryCode ||
+            !areaCode ||
+            !number) {
+            res
+                .status(400)
+                .json({ success: false, message: "Missing required fields" });
+            return;
+        }
         const newVolunteer = new volunteer_1.default({
             firstName,
             lastName,
             email,
-            phoneNumber,
+            phone: {
+                countryCode,
+                areaCode,
+                number,
+            },
             resumePath,
             positionName: positionName || "Not specified",
         });
