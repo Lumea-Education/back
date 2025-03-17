@@ -5,8 +5,8 @@
   "description": "RESTful API for careers and contact forms",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon dist/index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "jest",
     "build": "tsc"
   },
