@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import JobApplication from "../models/job";
-import { getFileUrl, deleteFile } from "../utils/file-helpers";
+import JobApplication from "../models/job.js";
+import { getFileUrl, deleteFile } from "../utils/file-helpers.js";
 
 export async function getApplications(
   req: Request,

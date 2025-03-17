@@ -1,5 +1,5 @@
 import express from "express";
-import { uploadToOneDrive } from "../controllers/one-drive";
+import { uploadToOneDrive } from "../controllers/one-drive.js";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import express, { Request, Response, RequestHandler } from "express";
-import CareerApplication from "../models/job";
+import CareerApplication from "../models/job.js";
 
 const router = express.Router();
 

@@ -2,7 +2,7 @@ import express, { Request, Response, RequestHandler } from "express";
 import formidable, { File } from "formidable";
 import fs from "fs";
 import path from "path";
-import VolunteerApplication from "../models/volunteer";
+import VolunteerApplication from "../models/volunteer.js";
 
 const router = express.Router();
 
@@ -78,12 +78,10 @@ const volunteerPostHandler: RequestHandler = async (req, res) => {
       console.log("✅ Volunteer application saved successfully!");
     } catch (error) {
       console.error("Error saving volunteer application:", error);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Failed to process volunteer application",
-        });
+      res.status(500).json({
+        success: false,
+        message: "Failed to process volunteer application",
+      });
     }
   });
 };

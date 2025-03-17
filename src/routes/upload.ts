@@ -7,8 +7,8 @@ import express, {
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
-import JobApplication from "../models/job";
-import VolunteerApplication from "../models/volunteer";
+import JobApplication from "../models/job.js";
+import VolunteerApplication from "../models/volunteer.js";
 
 const router = express.Router();
 
@@ -22,21 +22,29 @@ const allowedFileTypes = [
 // ✅ 업로드 디렉토리 설정
 const uploadDir = path.join(__dirname, "../uploads");
 
+// ----- 파일 저장 디렉토리 확인 및 생성 ----- //
+const ensureDirectoryExists = (dir: string) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
+
 // ----- Job Application Upload Handler ----- //
 const jobUploadHandler: RequestHandler = async (req, res, next) => {
   try {
     const { applicationId } = req.params;
 
     if (!req.files || (!req.files.resume && !req.files.coverLetter)) {
-      await res
+      return res
         .status(400)
         .json({ success: false, message: "No files provided" });
-      return;
     }
 
     // ✅ 파일 저장 디렉토리 설정
     const resumesDir = path.join(uploadDir, "resumes");
     const coverLettersDir = path.join(uploadDir, "cover-letters");
+    ensureDirectoryExists(resumesDir);
+    ensureDirectoryExists(coverLettersDir);
 
     let resumePath: string | null = null;
     let coverLetterPath: string | null = null;
@@ -45,15 +53,11 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
     if (req.files.resume) {
       const resume = req.files.resume as any;
 
-      // ✅ 파일 유형 검사
       if (!allowedFileTypes.includes(resume.mimetype)) {
-        await res
-          .status(400)
-          .json({
-            success: false,
-            message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
-          });
-        return;
+        return res.status(400).json({
+          success: false,
+          message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
+        });
       }
 
       const resumeFileName = `${uuidv4()}-${resume.name}`;
@@ -65,15 +69,11 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
     if (req.files.coverLetter) {
       const coverLetter = req.files.coverLetter as any;
 
-      // ✅ 파일 유형 검사
       if (!allowedFileTypes.includes(coverLetter.mimetype)) {
-        await res
-          .status(400)
-          .json({
-            success: false,
-            message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
-          });
-        return;
+        return res.status(400).json({
+          success: false,
+          message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
+        });
       }
 
       const coverLetterFileName = `${uuidv4()}-${coverLetter.name}`;
@@ -89,13 +89,12 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
     );
 
     if (!updatedApplication) {
-      await res
+      return res
         .status(404)
         .json({ success: false, message: "Application not found" });
-      return;
     }
 
-    await res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Files uploaded successfully",
       resumePath,
@@ -104,7 +103,7 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
     });
   } catch (error) {
     console.error("File Upload Error:", error);
-    await res
+    return res
       .status(500)
       .json({ success: false, message: "File upload failed" });
   }
@@ -114,33 +113,28 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
 const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
   try {
     if (!req.files || !req.files.resume) {
-      await res
+      return res
         .status(400)
         .json({ success: false, message: "No file provided" });
-      return;
     }
 
     const volunteerDir = path.join(uploadDir, "volunteer");
+    ensureDirectoryExists(volunteerDir);
+
     const resume = req.files.resume as any;
 
-    // ✅ 파일 유형 검사
     if (!allowedFileTypes.includes(resume.mimetype)) {
-      await res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
-        });
-      return;
+      return res.status(400).json({
+        success: false,
+        message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
+      });
     }
 
-    // ✅ 파일 저장 경로 설정
     const volunteerId = uuidv4();
     const resumeFileName = `${volunteerId}-${resume.name}`;
     const resumePath = `/uploads/volunteer/${resumeFileName}`;
     await resume.mv(path.join(volunteerDir, resumeFileName));
 
-    // ✅ 지원자 데이터 저장
     const {
       firstName,
       lastName,
@@ -159,10 +153,9 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
       !areaCode ||
       !number
     ) {
-      await res
+      return res
         .status(400)
         .json({ success: false, message: "Missing required fields" });
-      return;
     }
 
     const newVolunteer = new VolunteerApplication({
@@ -180,7 +173,7 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
 
     const savedVolunteer = await newVolunteer.save();
 
-    await res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Volunteer application submitted successfully",
       applicationId: savedVolunteer._id,
@@ -188,7 +181,7 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Volunteer Upload Error:", error);
-    await res
+    return res
       .status(500)
       .json({ success: false, message: "Volunteer upload failed" });
   }
