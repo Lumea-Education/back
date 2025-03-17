@@ -6,55 +6,96 @@ import express, {
 } from "express";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
+import fs from "fs";
 import JobApplication from "../models/job";
 import VolunteerApplication from "../models/volunteer";
 
 const router = express.Router();
 
-// Common upload directory
+// ✅ 허용할 파일 유형 정의
+const allowedFileTypes = [
+  "application/pdf",
+  "image/png",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
+];
+
+// ✅ 업로드 디렉토리 설정
 const uploadDir = path.join(__dirname, "../uploads");
 
 // ----- Job Application Upload Handler ----- //
 const jobUploadHandler: RequestHandler = async (req, res, next) => {
   try {
-    // This route expects a dynamic applicationId parameter in the URL
     const { applicationId } = req.params;
+
     if (!req.files || (!req.files.resume && !req.files.coverLetter)) {
-      res.status(400).json({ success: false, message: "No files provided" });
+      await res
+        .status(400)
+        .json({ success: false, message: "No files provided" });
       return;
     }
 
-    // Define subdirectories for job application files
+    // ✅ 파일 저장 디렉토리 설정
     const resumesDir = path.join(uploadDir, "resumes");
     const coverLettersDir = path.join(uploadDir, "cover-letters");
 
     let resumePath: string | null = null;
     let coverLetterPath: string | null = null;
 
+    // ✅ 이력서 (Resume) 업로드 처리
     if (req.files.resume) {
       const resume = req.files.resume as any;
+
+      // ✅ 파일 유형 검사
+      if (!allowedFileTypes.includes(resume.mimetype)) {
+        await res
+          .status(400)
+          .json({
+            success: false,
+            message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
+          });
+        return;
+      }
+
       const resumeFileName = `${uuidv4()}-${resume.name}`;
       resumePath = `/uploads/resumes/${resumeFileName}`;
       await resume.mv(path.join(resumesDir, resumeFileName));
     }
+
+    // ✅ 커버레터 (Cover Letter) 업로드 처리
     if (req.files.coverLetter) {
       const coverLetter = req.files.coverLetter as any;
+
+      // ✅ 파일 유형 검사
+      if (!allowedFileTypes.includes(coverLetter.mimetype)) {
+        await res
+          .status(400)
+          .json({
+            success: false,
+            message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
+          });
+        return;
+      }
+
       const coverLetterFileName = `${uuidv4()}-${coverLetter.name}`;
       coverLetterPath = `/uploads/cover-letters/${coverLetterFileName}`;
       await coverLetter.mv(path.join(coverLettersDir, coverLetterFileName));
     }
+
+    // ✅ 지원서 데이터 업데이트
     const updatedApplication = await JobApplication.findByIdAndUpdate(
       applicationId,
       { resumePath, coverLetterPath },
       { new: true }
     );
+
     if (!updatedApplication) {
-      res
+      await res
         .status(404)
         .json({ success: false, message: "Application not found" });
       return;
     }
-    res.status(201).json({
+
+    await res.status(201).json({
       success: true,
       message: "Files uploaded successfully",
       resumePath,
@@ -63,7 +104,9 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
     });
   } catch (error) {
     console.error("File Upload Error:", error);
-    res.status(500).json({ success: false, message: "File upload failed" });
+    await res
+      .status(500)
+      .json({ success: false, message: "File upload failed" });
   }
 };
 
@@ -71,17 +114,33 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
 const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
   try {
     if (!req.files || !req.files.resume) {
-      res.status(400).json({ success: false, message: "No file provided" });
+      await res
+        .status(400)
+        .json({ success: false, message: "No file provided" });
       return;
     }
+
     const volunteerDir = path.join(uploadDir, "volunteer");
     const resume = req.files.resume as any;
+
+    // ✅ 파일 유형 검사
+    if (!allowedFileTypes.includes(resume.mimetype)) {
+      await res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid file type. Only PDF, PNG, and DOCX are allowed.",
+        });
+      return;
+    }
+
+    // ✅ 파일 저장 경로 설정
     const volunteerId = uuidv4();
     const resumeFileName = `${volunteerId}-${resume.name}`;
     const resumePath = `/uploads/volunteer/${resumeFileName}`;
     await resume.mv(path.join(volunteerDir, resumeFileName));
 
-    // Extract detailed contact info from req.body
+    // ✅ 지원자 데이터 저장
     const {
       firstName,
       lastName,
@@ -91,6 +150,7 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
       number,
       positionName,
     } = req.body;
+
     if (
       !firstName ||
       !lastName ||
@@ -99,7 +159,7 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
       !areaCode ||
       !number
     ) {
-      res
+      await res
         .status(400)
         .json({ success: false, message: "Missing required fields" });
       return;
@@ -120,7 +180,7 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
 
     const savedVolunteer = await newVolunteer.save();
 
-    res.status(201).json({
+    await res.status(201).json({
       success: true,
       message: "Volunteer application submitted successfully",
       applicationId: savedVolunteer._id,
@@ -128,16 +188,17 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Volunteer Upload Error:", error);
-    res
+    await res
       .status(500)
       .json({ success: false, message: "Volunteer upload failed" });
   }
 };
 
-// Routes
-// For job applications, the route contains a dynamic parameter (applicationId)
+// ----- Routes ----- //
+// ✅ Job 지원서 파일 업로드 (이력서, 커버레터)
 router.post("/careers/upload/:applicationId", jobUploadHandler);
-// For volunteer applications, we use a distinct route (e.g., /careers/volunteer/upload)
+
+// ✅ Volunteer 지원서 파일 업로드
 router.post("/careers/volunteer/upload/:applicationId", volunteerUploadHandler);
 
 export default router;

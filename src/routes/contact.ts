@@ -1,8 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const ContactRequest = require("../models/contact");
+import express, { Request, Response, RequestHandler } from "express";
+import ContactRequest from "../models/contact";
 
-router.post("/", async (req, res) => {
+const router = express.Router();
+
+const contactPostHandler: RequestHandler = async (req, res) => {
   try {
     const {
       name,
@@ -16,10 +17,11 @@ router.post("/", async (req, res) => {
     } = req.body;
 
     if (!name || !email || !phoneNumber || !inquiryType || !message) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
+      return;
     }
 
     const contactRequest = new ContactRequest({
@@ -47,6 +49,8 @@ router.post("/", async (req, res) => {
       message: "Failed to process contact request",
     });
   }
-});
+};
 
-module.exports = router;
+router.post("/", contactPostHandler);
+
+export default router;

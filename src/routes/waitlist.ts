@@ -1,37 +1,37 @@
-const express = require("express");
-const router = express.Router();
-const WaitlistEntry = require("../models/wait");
+import express, { Request, Response, RequestHandler } from "express";
+import WaitlistEntry from "../models/wait";
 
-router.post("/", async (req, res) => {
+const router = express.Router();
+
+const waitlistPostHandler: RequestHandler = async (req, res) => {
   try {
     const { name, email, phone } = req.body;
 
     if (!name || !email || !phone) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
+      return;
     }
 
     const existingEntry = await WaitlistEntry.findOne({ email });
     if (existingEntry) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: "Email already registered in waitlist",
       });
+      return;
     }
 
-    // Create a new waitlist entry
     const waitlistEntry = new WaitlistEntry({
       name,
       email,
       phone,
     });
 
-    // Save to database
     await waitlistEntry.save();
 
-    // Return success response
     res.status(201).json({
       success: true,
       message: "Added to waitlist successfully",
@@ -44,6 +44,8 @@ router.post("/", async (req, res) => {
       message: "Failed to process waitlist entry",
     });
   }
-});
+};
 
-module.exports = router;
+router.post("/", waitlistPostHandler);
+
+export default router;

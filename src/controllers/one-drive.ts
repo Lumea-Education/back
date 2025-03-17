@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
-import fetch from "node-fetch";
+import { request } from "https";
 import { getAccessToken } from "../config/msal";
 
 export async function uploadToOneDrive(
@@ -23,25 +23,33 @@ export async function uploadToOneDrive(
     const fileStream = fs.createReadStream(tempFilePath);
     const uploadUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${file.name}:/content`;
 
-    const response = await fetch(uploadUrl, {
+    const options = {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": file.mimetype,
       },
-      body: fileStream,
+    };
+
+    const reqHttps = request(uploadUrl, options, (resHttp) => {
+      let data = "";
+      resHttp.on("data", (chunk) => (data += chunk));
+      resHttp.on("end", () => {
+        console.log("Upload success:", data);
+        fs.unlinkSync(tempFilePath);
+        res.status(200).json({
+          message: "Your file has been uploaded",
+          fileData: JSON.parse(data),
+        });
+      });
     });
 
-    if (!response.ok) {
-      throw new Error(`upload not succeeded: ${response.statusText}`);
-    }
-    const data = await response.json();
-    fs.unlinkSync(tempFilePath);
-
-    res.status(200).json({
-      message: "Your file has been uploaded",
-      fileData: data,
+    reqHttps.on("error", (error) => {
+      console.error("Upload failed:", error);
+      next(error);
     });
+
+    fileStream.pipe(reqHttps);
   } catch (error) {
     console.error("Error:", error);
     next(error);
