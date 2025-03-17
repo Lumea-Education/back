@@ -70,29 +70,54 @@ const jobUploadHandler: RequestHandler = async (req, res, next) => {
 // ----- Volunteer Upload Handler ----- //
 const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
   try {
-    // For volunteer uploads, we use a separate endpoint and storage directory.
-    // This example assumes that volunteer uploads only include a resume.
     if (!req.files || !req.files.resume) {
       res.status(400).json({ success: false, message: "No file provided" });
       return;
     }
     const volunteerDir = path.join(uploadDir, "volunteer");
     const resume = req.files.resume as any;
-    const resumeFileName = `${uuidv4()}-${resume.name}`;
+    const volunteerId = uuidv4();
+    const resumeFileName = `${volunteerId}-${resume.name}`;
     const resumePath = `/uploads/volunteer/${resumeFileName}`;
     await resume.mv(path.join(volunteerDir, resumeFileName));
 
-    // Create a new volunteer application record using form data
-    const { firstName, lastName, email, phoneNumber, positionName } = req.body;
-    // You might want to add validations here
+    // Extract detailed contact info from req.body
+    const {
+      firstName,
+      lastName,
+      email,
+      countryCode,
+      areaCode,
+      number,
+      positionName,
+    } = req.body;
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !countryCode ||
+      !areaCode ||
+      !number
+    ) {
+      res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+      return;
+    }
+
     const newVolunteer = new VolunteerApplication({
       firstName,
       lastName,
       email,
-      phoneNumber,
+      phone: {
+        countryCode,
+        areaCode,
+        number,
+      },
       resumePath,
       positionName: positionName || "Not specified",
     });
+
     const savedVolunteer = await newVolunteer.save();
 
     res.status(201).json({
