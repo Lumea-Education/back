@@ -24,11 +24,10 @@ if (!fs.existsSync(resumesDir)) fs.mkdirSync(resumesDir);
 if (!fs.existsSync(coverLettersDir)) fs.mkdirSync(coverLettersDir);
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir);
 
-// CORS 설정: 환경변수로 프론트엔드 URL 지정
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "*", // .env.local에서 FRONTEND_URL 환경변수 사용
+  origin: process.env.FRONTEND_URL,
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true, // 자격 증명 허용
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
