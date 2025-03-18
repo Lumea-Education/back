@@ -1,51 +1,28 @@
-import { type NextRequest, NextResponse } from "next/server";
+import express, { Request, Response } from "express";
 
-export async function POST(request: NextRequest) {
+const router = express.Router();
+
+router.post("/", async (req: Request, res: Response) => {
   try {
-    // Parse the JSON request body
-    const data = await request.json();
+    const { name, email, message } = req.body;
 
-    // Validate required fields
-    const requiredFields = ["name", "email", "phone", "inquiryType", "message"];
-    for (const field of requiredFields) {
-      if (!data[field]) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Missing required field: ${field}`,
-          },
-          { status: 400 }
-        );
-      }
+    if (!name || !email || !message) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing fields" });
     }
 
-    // Here you would typically:
-    // 1. Store the contact request in a database
-    // 2. Send notification emails
-    // 3. Create a ticket in your support system
+    console.log("Contact form submitted:", { name, email, message });
 
-    // For example:
-    // await db.contactRequests.create({ data });
-    // await sendNotificationEmail(data);
-
-    // Log the contact data (remove in production)
-    console.log("Contact request received:", data);
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Contact request submitted successfully",
-      },
-      { status: 201 }
-    );
+    return res
+      .status(201)
+      .json({ success: true, message: "Message sent successfully" });
   } catch (error) {
-    console.error("Error processing contact request:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to process contact request",
-      },
-      { status: 500 }
-    );
+    console.error("Contact form error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to send message" });
   }
-}
+});
+
+export default router;

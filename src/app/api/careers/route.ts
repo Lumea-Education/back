@@ -1,73 +1,66 @@
-import { type NextRequest, NextResponse } from "next/server";
+import express, { Request, Response } from "express";
 import { writeFile } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import fileUpload, { UploadedFile } from "express-fileupload";
 
-// Configure where uploaded files will be stored
+const router = express.Router();
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
-export async function POST(request: NextRequest) {
+// ✅ 파일 업로드 엔드포인트 (Express 버전)
+router.post("/", async (req: Request, res: Response) => {
   try {
-    // Parse the multipart form data
-    const formData = await request.formData();
-
-    // Create a unique ID for this application
-    const applicationId = uuidv4();
-
-    // Extract form fields
-    const applicationData: Record<string, any> = {};
-    const filePromises: Promise<void>[] = [];
-
-    // Process each form field
-    for (const [key, value] of formData.entries()) {
-      // Handle file uploads
-      if (value instanceof File) {
-        const fileName = `${applicationId}-${key}-${value.name}`;
-        const filePath = path.join(UPLOAD_DIR, fileName);
-
-        // Store file information in application data
-        applicationData[key] = {
-          originalName: value.name,
-          storedPath: filePath,
-          contentType: value.type,
-          size: value.size,
-        };
-
-        // Create a promise to write the file
-        const buffer = Buffer.from(await value.arrayBuffer());
-        filePromises.push(writeFile(filePath, buffer));
-      } else {
-        // Store regular form fields
-        applicationData[key] = value;
-      }
+    // ✅ 파일 업로드 체크
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No files uploaded" });
     }
 
-    // Wait for all files to be written
+    // ✅ 업로드한 파일 저장할 ID 생성
+    const applicationId = uuidv4();
+    const applicationData: Record<string, any> = {};
+
+    // ✅ 파일 업로드 처리
+    const filePromises: Promise<void>[] = [];
+    for (const [key, file] of Object.entries(req.files)) {
+      const uploadedFile = file as UploadedFile;
+
+      // ✅ 파일명 설정 (고유 ID + 원본 파일명)
+      const fileName = `${applicationId}-${key}-${uploadedFile.name}`;
+      const filePath = path.join(UPLOAD_DIR, fileName);
+
+      // ✅ 파일 정보 저장
+      applicationData[key] = {
+        originalName: uploadedFile.name,
+        storedPath: filePath,
+        contentType: uploadedFile.mimetype,
+        size: uploadedFile.size,
+      };
+
+      // ✅ 파일 저장 (비동기)
+      const buffer = uploadedFile.data;
+      filePromises.push(writeFile(filePath, buffer));
+    }
+
+    // ✅ 모든 파일 저장 완료될 때까지 대기
     await Promise.all(filePromises);
 
-    // Here you would typically store the application data in a database
-    // For example: await db.applications.create({ data: applicationData });
-
-    // Log the application data (remove in production)
     console.log("Application received:", applicationData);
 
-    // Return a success response
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Application submitted successfully",
-        applicationId,
-      },
-      { status: 201 }
-    );
+    // ✅ 성공 응답
+    return res.status(201).json({
+      success: true,
+      message: "Application submitted successfully",
+      applicationId,
+    });
   } catch (error) {
     console.error("Error processing application:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to process application",
-      },
-      { status: 500 }
-    );
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process application",
+    });
   }
-}
+});
+
+export default router;

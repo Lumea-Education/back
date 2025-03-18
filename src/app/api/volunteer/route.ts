@@ -1,73 +1,32 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
-import path from "path";
+import express, { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
+import path from "path";
+import fileUpload, { UploadedFile } from "express-fileupload";
 
-// Configure where uploaded files will be stored
-const UPLOAD_DIR = path.join(process.cwd(), "uploads", "volunteer");
+const router = express.Router();
+const UPLOAD_DIR = path.join(process.cwd(), "uploads/volunteers");
 
-export async function POST(request: NextRequest) {
+router.post("/", async (req: Request, res: Response) => {
   try {
-    // Parse the multipart form data
-    const formData = await request.formData();
-
-    // Create a unique ID for this volunteer application
-    const applicationId = uuidv4();
-
-    // Extract form fields
-    const applicationData: Record<string, any> = {};
-    const filePromises: Promise<void>[] = [];
-
-    // Process each form field
-    for (const [key, value] of formData.entries()) {
-      // Handle file uploads
-      if (value instanceof File) {
-        const fileName = `${applicationId}-${key}-${value.name}`;
-        const filePath = path.join(UPLOAD_DIR, fileName);
-
-        // Store file information in application data
-        applicationData[key] = {
-          originalName: value.name,
-          storedPath: filePath,
-          contentType: value.type,
-          size: value.size,
-        };
-
-        // Create a promise to write the file
-        const buffer = Buffer.from(await value.arrayBuffer());
-        filePromises.push(writeFile(filePath, buffer));
-      } else {
-        // Store regular form fields
-        applicationData[key] = value;
-      }
+    if (!req.files || !req.files.resume) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
     }
 
-    // Wait for all files to be written
-    await Promise.all(filePromises);
+    const resume = req.files.resume as UploadedFile;
+    const fileName = `${uuidv4()}-${resume.name}`;
+    const filePath = path.join(UPLOAD_DIR, fileName);
 
-    // Here you would typically store the volunteer application data in a database
-    // For example: await db.volunteerApplications.create({ data: applicationData });
+    await resume.mv(filePath);
 
-    // Log the application data (remove in production)
-    console.log("Volunteer application received:", applicationData);
-
-    // Return a success response
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Volunteer application submitted successfully",
-        applicationId,
-      },
-      { status: 201 }
-    );
+    return res
+      .status(201)
+      .json({ success: true, message: "Resume uploaded", filePath });
   } catch (error) {
-    console.error("Error processing volunteer application:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to process volunteer application",
-      },
-      { status: 500 }
-    );
+    console.error("Volunteer upload error:", error);
+    return res.status(500).json({ success: false, message: "Upload failed" });
   }
-}
+});
+
+export default router;

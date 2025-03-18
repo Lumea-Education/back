@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
+import express, { Request, Response } from "express";
 
-export async function GET() {
-  return NextResponse.json({
+const router = express.Router();
+
+router.get("/", (req: Request, res: Response) => {
+  res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
   });
-}
+});
+
+export default router;

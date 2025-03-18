@@ -7,10 +7,16 @@ import express, {
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url"; // ✅ ESM에서 __dirname 대체용 추가
+
 import JobApplication from "../models/job.js";
 import VolunteerApplication from "../models/volunteer.js";
 
 const router = express.Router();
+
+// ✅ ESM 환경에서 __dirname 대체 (CommonJS처럼 사용 가능)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ✅ 허용할 파일 유형 정의
 const allowedFileTypes = [
@@ -22,7 +28,7 @@ const allowedFileTypes = [
 // ✅ 업로드 디렉토리 설정
 const uploadDir = path.join(__dirname, "../uploads");
 
-// ----- 파일 저장 디렉토리 확인 및 생성 ----- //
+// ✅ 파일 저장 디렉토리 확인 및 생성
 const ensureDirectoryExists = (dir: string) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -162,11 +168,7 @@ const volunteerUploadHandler: RequestHandler = async (req, res, next) => {
       firstName,
       lastName,
       email,
-      phone: {
-        countryCode,
-        areaCode,
-        number,
-      },
+      phone: { countryCode, areaCode, number },
       resumePath,
       positionName: positionName || "Not specified",
     });

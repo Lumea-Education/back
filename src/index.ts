@@ -5,39 +5,44 @@ import dotenv from "dotenv";
 import fileUpload from "express-fileupload";
 import path from "path";
 
-// Load environment variables
+// ✅ `__dirname` 해결 (ESM 환경)
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ 환경 변수 로드
 dotenv.config({ path: ".env.local" });
 
-// Import configuration and utilities
-import { corsOptions } from "./config/cors";
-import connectDB from "./config/db";
-import { initializeUploadDirectories } from "./utils/file-helpers";
+// ✅ 설정 및 유틸리티 가져오기
+import { corsOptions } from "./config/cors.js";
+import connectDB from "./config/db.js";
+import { initializeUploadDirectories } from "./utils/file-helpers.js";
 
-// Connect to MongoDB
+// ✅ MongoDB 연결
 connectDB();
 
-// Initialize file upload directories
+// ✅ 파일 업로드 디렉토리 초기화
 initializeUploadDirectories();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5050; // 기본 포트 설정
 
-// Middleware
+// ✅ 미들웨어 설정
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({ createParentPath: true }));
 
-// Serve static files
+// ✅ 정적 파일 제공
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
-import careersRouter from "./routes/careers";
-import volunteerRouter from "./routes/volunteer";
-import contactRouter from "./routes/contact";
-import waitlistRouter from "./routes/waitlist";
-import uploadRouter from "./routes/upload";
-import oneDriveRouter from "./routes/one-drive";
+// ✅ 라우트 가져오기
+import careersRouter from "./routes/careers.js";
+import volunteerRouter from "./routes/volunteer.js";
+import contactRouter from "./routes/contact.js";
+import waitlistRouter from "./routes/waitlist.js";
+import uploadRouter from "./routes/upload.js";
+import oneDriveRouter from "./routes/one-drive.js";
 
 app.use("/api/careers", careersRouter);
 app.use("/api/volunteer", volunteerRouter);
@@ -46,32 +51,32 @@ app.use("/api/waitlist", waitlistRouter);
 app.use("/api", uploadRouter);
 app.use("/api", oneDriveRouter);
 
-// Health check endpoint
+// ✅ Health check 엔드포인트
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
-// Default route
+// ✅ 기본 라우트
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Welcome to the backend API!" });
 });
 
-// Global error handling middleware
+// ✅ 글로벌 에러 핸들러
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error("Global error handler:", err);
+  console.error("❌ Global error handler:", err);
   res.status(500).json({ success: false, error: err.message });
 });
 
-// Start server
+// ✅ 서버 시작
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
-// MongoDB connection event logging
+// ✅ MongoDB 연결 이벤트 로깅
 mongoose.connection.on("connected", () => {
   const dbName = mongoose.connection.db?.databaseName || "Unknown";
   console.log(`✅ MongoDB connected! Current DB: ${dbName}`);

@@ -1,57 +1,28 @@
-import { type NextRequest, NextResponse } from "next/server";
+import express, { Request, Response } from "express";
 
-export async function POST(request: NextRequest) {
+const router = express.Router();
+
+router.post("/", async (req: Request, res: Response) => {
   try {
-    // Parse the JSON request body
-    const data = await request.json();
+    const { email } = req.body;
 
-    // Validate required fields
-    const requiredFields = ["name", "email", "phone"];
-    for (const field of requiredFields) {
-      if (!data[field]) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Missing required field: ${field}`,
-          },
-          { status: 400 }
-        );
-      }
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email is required" });
     }
 
-    // Validate email format
-    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-    if (!emailRegex.test(data.email)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid email format",
-        },
-        { status: 400 }
-      );
-    }
+    console.log("Waitlist entry added:", email);
 
-    // Here you would typically store the waitlist entry in a database
-    // For example: await db.waitlist.create({ data });
-
-    // Log the waitlist data (remove in production)
-    console.log("Waitlist entry received:", data);
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Added to waitlist successfully",
-      },
-      { status: 201 }
-    );
+    return res
+      .status(201)
+      .json({ success: true, message: "Added to waitlist" });
   } catch (error) {
-    console.error("Error processing waitlist entry:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to process waitlist entry",
-      },
-      { status: 500 }
-    );
+    console.error("Waitlist error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to add to waitlist" });
   }
-}
+});
+
+export default router;

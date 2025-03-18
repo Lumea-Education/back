@@ -1,31 +1,16 @@
-import User from "../../models/user";
-import type { NextApiRequest, NextApiResponse } from "next";
+import express, { Request, Response } from "express";
+import User from "../../models/user.js";
 
-import connectDB from "../../config/db";
+const router = express.Router();
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  await connectDB();
-
-  if (req.method === "POST") {
-    try {
-      const { name, email, password } = req.body;
-      const user = new User({ name, email, password });
-      await user.save();
-      return res.status(201).json(user);
-    } catch (error) {
-      return res.status(500).json({ message: "Error creating user", error });
-    }
-  } else if (req.method === "GET") {
-    try {
-      const users = await User.find();
-      return res.status(200).json(users);
-    } catch (error) {
-      return res.status(500).json({ message: "Error fetching users", error });
-    }
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    console.error("User fetch error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch users" });
   }
+});
 
-  return res.status(405).json({ message: "Method Not Allowed" });
-}
+export default router;
