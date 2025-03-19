@@ -27,6 +27,18 @@ initializeUploadDirectories();
 const app = express();
 const PORT = process.env.PORT || 5050; // 기본 포트 설정
 
+const allowedOrigins = [
+  "https://lumea-edu.org",
+  "https://www.lumea-edu.org",
+  "http://lumea-edu.org",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+  })
+);
+
 // ✅ 미들웨어 설정
 app.use(cors());
 app.use(express.json());
