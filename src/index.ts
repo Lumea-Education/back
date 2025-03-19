@@ -28,7 +28,7 @@ const app = express();
 const PORT = process.env.PORT || 5050; // 기본 포트 설정
 
 // ✅ 미들웨어 설정
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({ createParentPath: true }));
