@@ -66,6 +66,9 @@ importers:
       '@types/node':
         specifier: ^18.19.80
         version: 18.19.80
+      '@types/nodemailer':
+        specifier: ^6.4.17
+        version: 6.4.17
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -601,6 +604,9 @@ packages:
 
   '@types/node@18.19.80':
     resolution: {integrity: sha512-kEWeMwMeIvxYkeg1gTc01awpwLbfMRZXdIhwRcakd/KlK53jmRC26LqcbIt7fnAQTu5GzlnWmzA3H6+l1u6xxQ==}
+
+  '@types/nodemailer@6.4.17':
+    resolution: {integrity: sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==}
 
   '@types/qs@6.9.18':
     resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
@@ -2183,6 +2189,10 @@ snapshots:
   '@types/node@18.19.80':
     dependencies:
       undici-types: 5.26.5
+
+  '@types/nodemailer@6.4.17':
+    dependencies:
+      '@types/node': 18.19.80
 
   '@types/qs@6.9.18': {}
 
