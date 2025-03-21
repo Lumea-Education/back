@@ -40,7 +40,6 @@ app.use(
 );
 
 // ✅ 미들웨어 설정
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({ createParentPath: true }));
